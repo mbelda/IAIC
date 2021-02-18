@@ -11,7 +11,28 @@ def exampleFunction(x):
 
 def aproxMaximo(fun, a, b):
     #Devuelve el máximo de la función en el intervalo a,b
-    return 1
+    #Generamos puntos equiespaciados en el intervalo
+    puntos = np.linspace(a,b,(b-a)*100)
+    #Para cada punto calculamos el valor de la función en ese x
+    im = np.vectorize(exampleFunction)(puntos)
+    #Devolvemos el máximo que alcanza la función
+
+    return np.amax(im)
+
+def aproxMaximoLenta(fun, a, b):
+    #Devuelve el máximo de la función en el intervalo a,b
+    
+    maximo = 0
+    for i in range((b-a)*100):
+        #Generamos puntos equiespaciados en el intervalo
+        x = a + i * 1.0/100.0
+        #Calculamos el valor de la función en el punto
+        im = fun(x)
+        #Actualizamos el maximo
+        if maximo < im:
+            maximo = im
+        
+    return maximo
 
 def integra_mc(fun, a, b, num_puntos):
     m = aproxMaximo(fun,a,b)
