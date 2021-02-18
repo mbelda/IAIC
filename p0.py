@@ -14,7 +14,7 @@ def aproxMaximo(fun, a, b):
     #Generamos puntos equiespaciados en el intervalo
     puntos = np.linspace(a,b,(b-a)*100)
     #Para cada punto calculamos el valor de la función en ese x
-    im = np.vectorize(exampleFunction)(puntos)
+    im = np.vectorize(fun)(puntos)
     #Devolvemos el máximo que alcanza la función
 
     return np.amax(im)
@@ -63,8 +63,8 @@ def integra_mc_lenta(fun, a, b, num_puntos):
     
     for i in range (0, num_puntos):
         #Generamos un punto aleatorio
-        x = random.randrange(a, b)
-        y = random.randrange(0, m)
+        x = random.uniform(a, b)
+        y = random.uniform(0, m)
         #Calculamos la imagen de la función en ese x
         im = exampleFunction(x)
         #Si queda por debajo lo sumamos
