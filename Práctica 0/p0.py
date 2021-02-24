@@ -47,7 +47,7 @@ def integra_mc(fun, a, b, num_puntos):
     im = np.vectorize(exampleFunction)(x)
     
     #Nos interesan los puntos con su y menor que la imagen de x
-    area = np.sum(y < im)/num_puntos*(b-a)*m
+    area = np.sum(y < im)/num_puntos*np.abs(b-a)*m
     
     toc = time.process_time()
 
@@ -71,7 +71,7 @@ def integra_mc_lenta(fun, a, b, num_puntos):
         if y < im:
             cont = cont + 1
     
-    area = cont/num_puntos*(b-a)*m
+    area = cont/num_puntos*abs(b-a)*m
     
     toc = time.process_time()
     
