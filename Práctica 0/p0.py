@@ -44,7 +44,7 @@ def integra_mc(fun, a, b, num_puntos):
     y = np.random.uniform(0,m,num_puntos)
     
     #Para cada punto calculamos el valor de la función en ese x
-    im = np.vectorize(exampleFunction)(x)
+    im = np.vectorize(fun)(x)
     
     #Nos interesan los puntos con su y menor que la imagen de x
     area = np.sum(y < im)/num_puntos*(b-a)*m
@@ -57,7 +57,7 @@ def integra_mc(fun, a, b, num_puntos):
 
 def integra_mc_lenta(fun, a, b, num_puntos):
     cont = 0
-    m = aproxMaximo(fun,a,b)
+    m = aproxMaximoLenta(fun,a,b)
     
     tic = time.process_time()
     
@@ -66,7 +66,7 @@ def integra_mc_lenta(fun, a, b, num_puntos):
         x = random.uniform(a, b)
         y = random.uniform(0, m)
         #Calculamos la imagen de la función en ese x
-        im = exampleFunction(x)
+        im = fun(x)
         #Si queda por debajo lo sumamos
         if y < im:
             cont = cont + 1

@@ -1,11 +1,5 @@
 import numpy as np
 from pandas.io.parsers import  read_csv
-
-import math
-import time
-import random
-
-from scipy import integrate
 import matplotlib.pyplot as plt
 
 def compute_cost_function(values, theta0, theta1):
@@ -35,7 +29,7 @@ def load_data():
 
 def show_figure(values, theta0, theta1):
     plt.plot(values[:, 0], values[:, 1], 'o', color='black', label="Data")
-    plt.plot(values[:, 0], theta0 + theta1*values[:, 0], label="REgression line")
+    plt.plot(values[:, 0], theta0 + theta1*values[:, 0], label="Regression line")
     plt.xlabel("Población de la ciudad en 10.000s")
     plt.ylabel("Ingresos en $10.000s") 
     plt.legend()
