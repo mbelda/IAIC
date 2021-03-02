@@ -65,7 +65,7 @@ def evolucionCostesModificandoAlpha(X, Y, m, n):
         plt.ylabel("Coste")
         plt.legend()
         plt.title("Evolución del coste con alpha=" + str(alpha))
-        #plt.savefig("regresion_lineal_varias_variables_alpha_" + str(alpha) + ".png")
+        plt.savefig("regresion_lineal_varias_variables_alpha_" + str(alpha) + ".png")
     
     
     print("-------------- DESCENSO DE GRADIENTE --------------")
