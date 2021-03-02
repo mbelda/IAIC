@@ -26,11 +26,11 @@ def normalizar(X, n):
 
     
 def coste(X, Y, Theta, m):
-    diferencias = np.dot(X, Theta) - Y
+    diferencias = np.subtract(np.dot(X, Theta), Y)
     return 1/(2*m)*(np.sum(np.power(diferencias, 2)))
 
 def calculaGradiente(X, Y, Theta, m):
-    return 1/m * np.dot(np.transpose(X), np.subtract(coste(X, Y, Theta, m), Y))
+    return 1/m * np.dot(np.transpose(X), np.subtract(np.dot(X, Theta), Y))
 
 def actualizaTheta(X, Y, Theta, m, alpha):
     return Theta - alpha*calculaGradiente(X, Y, Theta, m)
@@ -52,49 +52,27 @@ def main():
     X = np.hstack([np.ones([m,1]), X])
     
     #Valroes de prueba de alpha
-    alphas = [0.3, 0.1, 0.03, 0.01]
+    alphas = [1.5, 1.0, 0.5, 0.3, 0.1, 0.03, 0.01]
     
     #Valores fijos
-    nIt = 1500
-    Theta = np.zeros(n+1)
+    nIt = 800
     
-    # for alpha in alphas:
-    #     costes = []
-    #     for i in range(nIt):
-    #         costes.append(coste(X, Y, Theta, m))
-    #         Theta = actualizaTheta(X, Y, Theta, m, alpha)
+    
+    for alpha in alphas:
+        Theta = np.zeros(n+1)
+        costes = []
+        for i in range(nIt):
+            costes.append(coste(X, Y, Theta, m))
+            Theta = actualizaTheta(X, Y, Theta, m, alpha)
            
-    #     fig = plt.figure()
-    #     plt.scatter(range(nIt), costes, c='blue')
-    #     plt.xlabel("Número de iteraciones")
-    #     plt.ylabel("Coste")
-    #     plt.legend()
-    #     plt.title("Evolución del coste con alpha=" + str(alpha))
-    #     #plt.savefig('regresion_lineal_varias_variables.png')
-    
-    alpha = alphas[0]
-    costes = []
-    for i in range(nIt):
-        costes.append(coste(X, Y, Theta, m))
-        Theta = actualizaTheta(X, Y, Theta, m, alpha)
-    
-    print(costes)
-    fig = plt.figure()
-    plt.scatter(range(nIt), costes, c='blue')
-    plt.xlabel("Número de iteraciones")
-    plt.ylabel("Coste")
-    plt.legend()
-    plt.title("Evolución del coste con alpha=" + str(alpha))
-    
-    
-    
-  
-    
-    
-
-    
+        fig = plt.figure()
+        plt.scatter(range(nIt), costes, c='blue')
+        plt.xlabel("Número de iteraciones")
+        plt.ylabel("Coste")
+        plt.legend()
+        plt.title("Evolución del coste con alpha=" + str(alpha))
+        plt.savefig("regresion_lineal_varias_variables_alpha_" + str(alpha) + ".png")
         
-    
     
 
 
