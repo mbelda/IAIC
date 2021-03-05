@@ -10,62 +10,62 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
-#Cargamos los valores de training
-valores = read_csv("ex1data1.csv", header=None).to_numpy()
-m,n = valores.shape
 
-def valoresY():
-    return valores[:,n-1]
+def load_data(file):
+    data = read_csv(file, header=None)
+    return np.asarray(data)
 
-def valoresX():
-    return valores[:,n-2]
-    
+def applyH(theta, X):
+    #line y = theta0 + theta1*x
+    return np.add(theta[0], np.dot(theta[1], X))
 
-def aplicaH(theta):
-    #Una recta con theta = (theta_0, theta_1)
-    return np.add(theta[0], np.dot(theta[1], valoresX()))
+def compute_cost_function(theta, X, Y, m):
+    #Diference between real and aproximate images
+    diferences = np.abs(np.subtract(applyH(theta, X), Y)) 
+    return 1/(2*m)*(np.sum(np.power(diferences, 2)))
 
-def funcion_coste(theta):
-    #Calculo para cada punto su diferencia entre la imagen real y la imagen por la recta aproximada
-    diferencias = np.abs(aplicaH(theta) - valoresY()) 
-    return 1/(2*m)*(np.sum(np.power(diferencias, 2))) 
-
-
-def actualiza_theta(theta, alpha):
-    diferencias = aplicaFuncion(theta) - valoresY()
-    auxtheta0 = theta[0] - alpha/m*np.sum(diferencias)
-    auxtheta1 = theta[1] - alpha/m*np.sum(np.dot(diferencias, valoresX()))
+def update_theta(theta, alpha, X, Y, m):
+    diferences = np.subtract(applyH(theta, X), Y)
+    auxtheta0 = theta[0] - alpha/m*np.sum(diferences)
+    auxtheta1 = theta[1] - alpha/m*np.sum(np.dot(diferences, X))
     return [auxtheta0, auxtheta1]
 
-def calculaThetaoptimoYGrafica_Parte1():
-    #Decidimos los parametros fijos 
-    alpha = 0.01 #Alpha: parámetro para avanzar en el descenso de gradiente
-    theta = [0,0] #Theta inicial
-    nIt = 1500 #Numero de iteraciones para encontrar el theta optimo
+def optimusThetaAndPlot_Part1(values, X, Y, m, n):
+    # Init gradient descendant
+    loops = 1500
+    alpha = 0.01
+    theta = np.zeros(m)
+
+    cost = compute_cost_function(theta, X, Y, m)
+    print("Initial cost:",cost)
+
+    for i in range(loops):
+        # Update theta values
+        theta = update_theta(theta, alpha, X, Y, m)
     
-    print("Coste con theta=[0,0]: " + str(funcion_coste(theta)))
-    #Itero hasta conseguir un coste mínimo
-    for i in range(nIt):
-        theta = actualiza_theta(theta, alpha)
+    # Compute cost function
+    cost = compute_cost_function(theta, X, Y, m)
+
+    print("The computed line is y = ",theta[0],"+ ",theta[1],"x")
+    print("Final cost:",cost)
     
-    #Ahora tenemos un coste mínimo
-    print("Coste mejor: " + str(funcion_coste(theta)))
-    valor = 7
-    print("Prediccion para 70.000 habitantes: " + str((theta[0] + theta[1]*valor)*10000) + "$")
-    print("Mejores theta: " + str(theta))
+    #Example
+    citizens=7
+    print("Example prediction for 70.000 citizens: " + str((theta[0] + theta[1]*citizens)*10000) + "$")
     
-    #Dibujamos los puntos y la recta que los aproxima
+    #Plot data points and aproxximation line
     plt.figure()
-    plt.scatter(valores[:,0], valores[:,1], c='blue')
-    plt.plot(valoresX(), aplicaFuncion(theta), c='red')
+    plt.scatter(values[:,0], values[:,1], c='blue')
+    plt.plot(X, applyH(theta, X), c='red')
     plt.xlabel("Población de la ciudad en 10.000s")
     plt.ylabel("Ingresos en $10.000s")
     plt.legend()
     plt.savefig('regresion_lineal.png')
     
+    return theta
+    
 
-
-def make_data(t0_range, t1_range, X, Y):
+def make_data(t0_range, t1_range, X, Y, m):
     """
         Genera las matrices X,Y,Z para generar un plot en 3D
     """
@@ -78,47 +78,43 @@ def make_data(t0_range, t1_range, X, Y):
     # de todos los puntos de la rejilla
     Coste = np.empty_like(Theta0)
     for ix, iy in np.ndindex(Theta0.shape):
-        Coste[ix, iy] = funcion_coste([Theta0[ix, iy], Theta1[ix, iy]])
+        Coste[ix, iy] = compute_cost_function([Theta0[ix, iy], Theta1[ix, iy]], X, Y, m)
     return [Theta0, Theta1, Coste]
     
-def visualizacionFuncionCoste_Parte1_1():
+def plotsCostFunction_Part1_1(X, Y, m, n, theta_opt):
     t0_range = [-10, 10]
     t1_range = [-1, 4]
     
-    #Genero las matrices para el plot 3D
-    Theta0, Theta1, Coste = make_data(t0_range, t1_range, valoresX(), valoresY())
+    #Generate the matrix
+    Theta0, Theta1, Coste = make_data(t0_range, t1_range, X, Y, m)
     
-    #Dibujamos el contour
+    #Plot contour
     plt.figure()
     plt.contour(Theta0, Theta1, Coste, np.logspace(-2, 3, 20), colors='blue')
-    plt.xlabel("Theta_0")
-    plt.ylabel("Theta_1")
+    plt.scatter(theta_opt[0], theta_opt[1], c='red')
+    plt.xlabel(r'$\theta_0$')
+    plt.ylabel(r'$\theta_1$')
     plt.legend()
     plt.savefig('ContourRegresionLineal.png')
 
-
-    #Dibujamos el surface
+    #Plot surface
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    surf = ax.plot_surface(Theta0, Theta1, Coste, cmap=cm.coolwarm)
+    ax.plot_surface(Theta0, Theta1, Coste, cmap=cm.coolwarm)
     plt.savefig('Surface_regresion_lineal.png')
     
 def main():
-    #Cargamos los valores de training
-    #valores = read_csv("ex1data1.csv", header=None).to_numpy()
+    # Load values
+    values = load_data("ex1data1.csv")
+    m,n = values.shape
     
-    calculaThetaoptimoYGrafica_Parte1()
-    
-    visualizacionFuncionCoste_Parte1_1()
-    
+    X = values[:,n-2]
+    Y = values[:,-1]
   
+    theta_opt = optimusThetaAndPlot_Part1(values, X, Y, m, n)
+    
+    plotsCostFunction_Part1_1(X, Y, m, n, theta_opt)
     
     
-
-    
-        
-    
-    
-
-
-main()
+if __name__ == "__main__":
+    main()
