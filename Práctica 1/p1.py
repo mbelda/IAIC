@@ -17,7 +17,7 @@ def load_data(file):
 
 def applyH(theta, X):
     #line y = theta0 + theta1*x
-    return np.add(theta[0], np.dot(theta[1], X))
+    return theta[0] + theta[1]* X
 
 def compute_cost_function(theta, X, Y, m):
     #Diference between real and aproximate images
@@ -38,7 +38,7 @@ def optimusThetaAndPlot_Part1(values, X, Y, m, n):
 
     cost = compute_cost_function(theta, X, Y, m)
     print("Initial cost:",cost)
-
+    
     for i in range(loops):
         # Update theta values
         theta = update_theta(theta, alpha, X, Y, m)
@@ -63,6 +63,7 @@ def optimusThetaAndPlot_Part1(values, X, Y, m, n):
     plt.savefig('regresion_lineal.png')
     
     return theta
+
     
 
 def make_data(t0_range, t1_range, X, Y, m):

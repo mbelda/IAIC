@@ -11,7 +11,6 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
 
-
 def getExampleValues():
     feet = 1650
     nHab = 3
@@ -21,27 +20,26 @@ def load_data(file):
     return read_csv(file, header=None).to_numpy().astype(float)
 
 def normalize(X):
-    mu = []
-    sigma = []
-    #Para cada atributo (= columna)
+    mu = np.array([])
+    sigma = np.array([])
+    #For each attribute (= column)
     for i in range(np.shape(X)[1]):
-        #Calculo su media
-        mu.append(np.mean(X[:, i]))
-        sigma.append(np.std(X[:, i]))
+        mu = np.append(mu, np.mean(X[:, i]))
+        sigma = np.append(sigma, np.std(X[:, i]))
     
     X_norm = np.divide(np.subtract(X, mu), sigma)
     return X_norm, mu, sigma
 
     
 def costFunction(X, Y, Theta, m):
-    diferencias = np.subtract(np.dot(X, Theta), Y)
-    return 1/(2*m)*(np.sum(np.power(diferencias, 2)))
+    diferences = np.subtract(np.dot(X, Theta), Y)
+    return 1/(2*m)*(np.sum(np.power(diferences, 2)))
 
-def calculaGradiente(X, Y, Theta, m):
+def computeGradient(X, Y, Theta, m):
     return 1/m * np.dot(np.transpose(X), np.subtract(np.dot(X, Theta), Y))
 
 def updateTheta(X, Y, Theta, m, alpha):
-    return Theta - alpha*calculaGradiente(X, Y, Theta, m)
+    return Theta - alpha*computeGradient(X, Y, Theta, m)
 
 def costFunctionvolutionModifyingAlpha(X, Y, m, n):
     #Normalizo X
@@ -63,7 +61,7 @@ def costFunctionvolutionModifyingAlpha(X, Y, m, n):
             costs.append(costFunction(X, Y, Theta, m))
             Theta = updateTheta(X, Y, Theta, m, alpha)
         
-        if alpha == 0.01:
+        if alpha == 0.1:
             #It's a good alpha, save optimum theta for later prediction example
             Theta_opt = Theta
         plt.figure()
