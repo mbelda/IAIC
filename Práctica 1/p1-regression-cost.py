@@ -10,7 +10,7 @@ def compute_cost_function(X, Y, theta):
     computed_values = np.dot(X, theta)
     expected_values = Y
     aux = (computed_values - expected_values)
-    square = np.matmul(aux.T, aux)
+    square = np.matmul(np.transpose(aux), aux)
 
     cost = np.sum(square)/(2*len(X))
     return cost

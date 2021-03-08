@@ -2,36 +2,38 @@ import numpy as np
 from pandas.io.parsers import  read_csv
 import matplotlib.pyplot as plt
 
-def compute_cost_function(values, theta0, theta1):
-    computed_values = theta0 + theta1*values[:, 0]
-    expected_values = values[:, 1]
+def normalize(X):
+    m = np.shape(X)[1]
+    mean_X = np.ones(m)
+    var_X = np.ones(m)
+    for i in range(m):
+        if i != 0:
+            mean_X[i] = np.mean(X[:, i])
+            var_X[i] = np.std(X[:, i])
+            X[:, i] = (X[:, i] - mean_X[i])/var_X[i]
+    return X, mean_X, var_X
 
-    cost = 1/(2*len(values[:, 0]))*np.sum((computed_values - expected_values)**2)
-    return cost
+def show_cost_function(loops, cost, title):
+    plt.figure()
+    plt.plot(loops, cost,'o', c='blue', label='vector')
+    plt.xlabel("Iterations")
+    plt.ylabel("Cost")
+    plt.legend()
+    plt.savefig('p1-relation-'+ loops +'.png')
 
-def compute_cost_function_der(X, Y, thetai, thetai_1):
-    computed_values = thetai + thetai_1*values[:, 0]
+def compute_cost_function(X, Y, theta):
+    computed_values = np.dot(X, theta)
     expected_values = Y
-
-    cost = 1/(len(X))*np.sum((computed_values - expected_values)*X)
+    aux = (computed_values - expected_values)
+    square = np.matmul(np.transpose(aux), aux)
+    cost = np.sum(square)/(2*len(X))
     return cost
 
-def gradient_descent_vector_method(X, Y):
-    # Init gradient descendant
-    loops = 1500
-    alpha = 0.01
-    m = np.shape(X)[0]
-    theta = np.zeros(m)
-    theta_aux = np.zeros(m)
-
-    cost = compute_cost_function(values, theta0, theta1)
-    print("Initial cost:",cost)
-    for i in range(loops):
-        for j in range(m):
-            # Update theta values
-            theta_aux = theta[j] - alpha* compute_cost_function_der(X[:,j], Y, theta[j], theta[j+1])
-    theta = theta_aux
-    print(theta)
+def compute_cost_function_der(X, Y, theta, m):
+    computed_values = np.dot(X, theta)
+    expected_values = Y
+    aux = (computed_values - expected_values)
+    return 1/m * np.matmul(np.transpose(X), aux)
 
 def gradient_descent_matrix_method(X, Y):
     # Init gradient descendant
@@ -39,40 +41,26 @@ def gradient_descent_matrix_method(X, Y):
     alpha = 0.01
     m = np.shape(X)[0]
     theta = np.zeros(m)
+    theta_aux = np.zeros(m)
+    cost = []
+    # Normalize data
+    X, mean_X, var_X = normalize(X)
 
-    cost = compute_cost_function(values, theta0, theta1)
-    print("Initial cost:",cost)
-
+    # Update theta & compute cost
+    cost.append(compute_cost_function(X, Y, theta))
+    print("Initial cost:", cost[0])
     for i in range(loops):
         # Update theta values
-        theta0_aux = theta0 - alpha* compute_cost_function_der_0(values, theta0, theta1)
-        theta1_aux = theta1 - alpha* compute_cost_function_der_1(values, theta0, theta1)
-        theta0 = theta0_aux
-        theta1 = theta1_aux
-
-        # Compute cost function
-        cost = compute_cost_function(values, theta0, theta1)
-
-    print("The computed line is y = ",theta0,"+ ",theta1,"x")
-    print("Final cost:",cost)
+        theta_aux = theta - alpha*compute_cost_function_der(X, Y, theta, m)
+        cost.append(compute_cost_function(X, Y, theta_aux))
+    theta = theta_aux
+    print("Final cost:", cost[m-1])
+    show_cost_function(loops, cost)
+    return theta, mean_X, var_X
 
 def normal_method(X, Y):
-    # Before starting algorythm, we need to normalice these data   
-    m = np.shape(X)[1]
-    print(m)
-    print(np.shape(X))
-    for i in range(m):
-        if i != 0:
-            X[:, i] = (X[:, i] - np.mean(X[:, i]))/np.std(X[:, i])
-    
-    Y = (Y - np.mean(Y))/np.std(Y)
-    print(X)
-    print(Y)
-
     X_T = np.transpose(X)
-    theta = np.matmul(np.matmul(np.linalg.pinv(np.matmul(X_T,X)),X_T),Y)
-    print(theta)
-
+    return np.matmul(np.matmul(np.linalg.pinv(np.matmul(X_T,X)),X_T),Y)
 
 def main():
     # Load values
@@ -82,25 +70,13 @@ def main():
     m = np.shape(X)[0]
     X = np.hstack([np.ones([m, 1]), X])
 
-    # gradient descent with vectors
-
     # gradient descent with matrix
+    theta, mean_X, var_X = gradient_descent_matrix_method(X, Y)
+    print(theta)
 
     # normal equation
-    normal_method(X, Y)
-
-    # Mostrar gráfico
-    # show_figure(values, theta0, theta1)
+    theta = normal_method(X, Y)
+    print(theta)
 
 if __name__ == "__main__":
     main()
-    
-
-
-    #Los valores de theta por el metodo del gradiente y por el metodo de la normal,
-    #seran distintos pq estamos normalizando los vectores por lo que necesitamos calcular el normal
-    # de la x que tomamos(guardar la media y mediana)
-
-
-
-    # Representamos el cuadrado de forma matricial multiplicando la transpuesta por la original
