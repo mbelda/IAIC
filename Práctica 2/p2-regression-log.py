@@ -2,7 +2,6 @@ import numpy as np
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
 from pandas.io.parsers import read_csv
-from matplotlib import cm
 
 def compute_sigmoid(Z):
     mat = 1/ (1 + np.exp(-Z))
@@ -32,21 +31,24 @@ def show_border(X, Y, theta):
 
     plt.contour(xx1, xx2, line, [0.5], linewidths=2, colors='black')
 
-def show_regression_log(X, Y, theta):
-    # plot points where y=1
-    pos = np.where(Y == 1)
-    plt.scatter(X[pos, 0], X[pos, 1], marker='+',c='green', label='Admitted')
-
+def show_regression_log(theta, X, Y):
     # plot points where y=0
     pos = np.where(Y == 0)
     plt.scatter(X[pos, 0], X[pos, 1], marker='o',c='orange', label='Not admitted')
 
+    # plot points where y=1
+    pos = np.where(Y == 1)
+    plt.scatter(X[pos, 0], X[pos, 1], marker='+',c='green', label='Admitted')
+
     # plot line
     show_border(X, Y, theta)
 
-    plt.xlabel("Exam 1 score")
-    plt.ylabel("Exam 2 score")
+    plt.xlabel('Exam 1 score')
+    plt.ylabel('Exam 2 score')
+    plt.text(0.1, 0.9, 'text', size=15, color='purple')
     plt.savefig('p2-regression-log.png')
+
+
 
 def main():
     # Load values
@@ -75,7 +77,7 @@ def main():
     cost_opt = compute_cost_function(theta_opt, matrix_X, Y)
     print('Optimal cost: ', cost_opt)
 
-    show_regression_log(X, Y, theta_opt)
+    show_regression_log(theta_opt, X, Y)
 
 if __name__ == "__main__":
     main()
