@@ -111,6 +111,9 @@ def main():
     Y = values[:,-1]
     
     m, n = np.shape(X)
+
+    print(np.shape(X))
+    print(np.shape(Y))
     
     #Parte 2.1
     costFunctionvolutionModifyingAlpha(X, Y, m, n)

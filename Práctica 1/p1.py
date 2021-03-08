@@ -109,7 +109,7 @@ def main():
     values = load_data("ex1data1.csv")
     m,n = values.shape
     
-    X = values[:,n-2]
+    X = values[:,:-1]
     Y = values[:,-1]
   
     theta_opt = optimusThetaAndPlot_Part1(values, X, Y, m, n)
