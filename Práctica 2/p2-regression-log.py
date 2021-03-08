@@ -45,7 +45,6 @@ def show_regression_log(theta, X, Y):
 
     plt.xlabel('Exam 1 score')
     plt.ylabel('Exam 2 score')
-    plt.text(0.1, 0.9, 'text', size=15, color='purple')
     plt.savefig('p2-regression-log.png')
 
 
