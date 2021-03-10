@@ -106,7 +106,7 @@ def regularizedLogisticregression(X, Y):
     poly = PolynomialFeatures(6)
     X_pol = poly.fit_transform(X)
     
-    lambdas = [0.0, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.]
+    lambdas = [0.0, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1., 2., 50.]
    
     for lamb in lambdas:
         #Initial theta
