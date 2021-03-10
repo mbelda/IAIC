@@ -18,7 +18,7 @@ def compute_gradient(theta, X, Y):
     return np.dot(np.transpose(X), aux) / len(X)
 
 def compute_optimal_params(theta, X, Y):
-    result = opt.fmin_tnc(func=compute_cost_function, x0=theta, fprime=compute_gradient, args=(X,Y))
+    result = opt.fmin_tnc(func=compute_cost_function, x0=theta, fprime=compute_gradient, args=(X,Y), disp=False)
     return result[0]
 
 def show_border(X, Y, theta):
@@ -45,6 +45,7 @@ def show_regression_log(theta, X, Y):
 
     plt.xlabel('Exam 1 score')
     plt.ylabel('Exam 2 score')
+    plt.legend(loc='upper right')
     plt.savefig('p2-regression-log.png')
     return pos_adm[0], pos_no_adm[0]
 
