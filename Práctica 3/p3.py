@@ -18,7 +18,7 @@ def sigmoid(z):
 def cost(theta, X, Y):
     H = sigmoid(np.dot(X, theta))
     
-    return -1 / len(X) * (np.dot(Y, np.log(H)) + np.dot((1-Y), np.log(1-H)))
+    return -1 / len(X) * (np.dot(Y, np.log(H)) + np.dot((1-Y), np.log(1-H + 1e-6)))
 
 def regularized_cost(theta, lamb, X, Y):
     return cost(theta, X, Y) + lamb/(2*len(X))*np.sum(np.power(theta, 2))
@@ -50,12 +50,9 @@ def oneVsAll(X, y, n_labels, reg):
         de regularización 'reg' y devuelve el resultado en una matriz, donde
         la fila i-ésima corresponde al clasificador de la etiqueta i-ésima
     """
-
-    #Add 1s column to X
-    X_vec = np.hstack([np.ones([X.shape[0],1]), X])
     
     #Create thetas matrix
-    thetas = np.zeros(shape=(n_labels, X_vec.shape[1]))
+    thetas = np.zeros(shape=(n_labels, X.shape[1]))
     
     #Compute theta for each label
     for i in range(n_labels):
@@ -68,14 +65,60 @@ def oneVsAll(X, y, n_labels, reg):
         np.put(y_i, label_i, 1)
         
         #Compute optimized theta
-        theta_i = regularizedLogisticregression(X_vec, y_i, reg)
+        theta_i = regularizedLogisticregression(X, y_i, reg)
         thetas[i] = theta_i
 
-    print(thetas)
     return thetas
 
-def main():
+def multiclassRegularizedLogisticRegression(X, y):    
+    #Add 1s column to X
+    X_vec = np.hstack([np.ones([X.shape[0],1]), X])
+    
+    #Get thetas
+    n_labels = 10
+    reg = 0.1
+    thetas = oneVsAll(X_vec, y, n_labels, reg)
+    
+    #Clasify the examples
+    hits = 0
 
+    for ex, row in zip(X_vec, range(X.shape[0])):
+        output = np.dot(thetas, ex)
+        if np.argmax(output) == y[row] \
+            or (np.argmax(output) == 0 and y[row] == 10):
+            hits += 1
+
+
+    print("Hit rate: " + str(hits/X.shape[0]*100) + "%")
+
+def neuralNetwork(theta1, theta2, X, y):
+    #Add 1s column to X
+    X_vec = np.hstack([np.ones([X.shape[0],1]), X])
+    
+    #Define nodes per each layer
+    input_layer_size = 401
+    hidden_layer_size = 26
+    n_labels = 10
+    
+    hits = 0
+    row = 0
+    #compute result or each example
+    for ex in X_vec:
+        ex.reshape(ex.shape[0], 1)
+        #Hidden layer
+        aux_res = np.dot(ex, theta1.T)
+        #Faltaria meter el 1 extra de la capa
+        aux_res = np.hstack([np.ones([aux_res.shape[0],1]), aux_res])
+        output = np.dot(aux_res, theta2.T)
+        
+        if np.argmax(output) + 1 == y[row]: #Output[0] means label 1, etc
+            hits += 1
+        
+        row += 1
+    
+    print("Hit rate: " + str(hits/X.shape[0]*100) + "%")
+
+def main():
     data = loadmat('ex3data1.mat')
 
     y = data['y']
@@ -86,12 +129,17 @@ def main():
     plt.imshow(X[sample,:].reshape(-1, 20).T)
     plt.axis('off')
     
-    #Get thetas
-    n_labels = 10
-    reg = 0.1
-    oneVsAll(X, y, n_labels, reg)
-
-        
+    print("----------------- MULTICLASS REGULARIZED LOGISTIC REGRESSION -----------------")
+    multiclassRegularizedLogisticRegression(X, y)
+    
+    weights = loadmat ('ex3weights.mat')
+    theta1, theta2 = weights['Theta1'], weights['Theta2']
+    # Theta1 es de dimensión 25 x 401
+    # Theta2 es de dimensión 10 x 26
+    
+    print("----------------- NEURAL NETWORK -----------------")
+    neuralNetwork(theta1, theta2, X, y)
+    
  
 if __name__ == "__main__":
     main()
