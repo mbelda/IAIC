@@ -95,27 +95,29 @@ def neuralNetwork(theta1, theta2, X, y):
     #Add 1s column to X
     X_vec = np.hstack([np.ones([X.shape[0],1]), X])
     
-    #Define nodes per each layer
-    input_layer_size = 401
-    hidden_layer_size = 26
-    n_labels = 10
-    
     hits = 0
     row = 0
-    #compute result or each example
+    fallos = np.zeros(10)
+    #compute result for each example
     for ex in X_vec:
-        ex.reshape(ex.shape[0], 1)
+        ex.reshape(ex.shape[0], 1) # (401, 1)
         #Hidden layer
-        aux_res = np.dot(ex, theta1.T)
-        #Faltaria meter el 1 extra de la capa
-        aux_res = np.hstack([np.ones([aux_res.shape[0],1]), aux_res])
-        output = np.dot(aux_res, theta2.T)
+        aux_res = np.dot(theta1, ex) # (25, 401) x (401, 1)
+        aux_res.reshape(aux_res.shape[0], 1) # (25, 1)
+        #Add 1 to aux_res
+        aux_res = np.hstack([1, aux_res]) # (26, 1)
+        #Output layer
+        output = np.dot(theta2, aux_res) # (10, 26) x (26, 1)
         
-        if np.argmax(output) + 1 == y[row]: #Output[0] means label 1, etc
+        if np.argmax(output) + 1 == y[row]: #Output[i] means label i+1
             hits += 1
+        else:
+            fallos[y[row]-1] += 1
         
         row += 1
     
+    print(hits)
+    print(fallos)
     print("Hit rate: " + str(hits/X.shape[0]*100) + "%")
 
 def main():
@@ -138,7 +140,8 @@ def main():
     # Theta2 es de dimensión 10 x 26
     
     print("----------------- NEURAL NETWORK -----------------")
-    neuralNetwork(theta1, theta2, X, y)
+    neuralNetwork(theta1, theta2, X, y)       
+    
     
  
 if __name__ == "__main__":
