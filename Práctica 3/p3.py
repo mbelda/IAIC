@@ -43,7 +43,20 @@ def regularizedLogisticregression(X, Y, reg):
                           disp=False)
     return result[0]
     
+def accuracyPercentage(inp, output, y):
+    hits = 0
+    row = 0
+    fallos = np.zeros(10)
+    for ex in inp:
+        if np.argmax(output[row]) + 1 == y[row]:
+            hits += 1
+        else:
+            fallos[y[row]-1] += 1
+        
+        row += 1
 
+    print("Hit rate: " + str(hits/inp.shape[0]*100) + "%")
+    
 def oneVsAll(X, y, n_labels, reg):
     """
         oneVsAll entrena varios clasificadores por regresión logística con término
@@ -91,34 +104,25 @@ def multiclassRegularizedLogisticRegression(X, y):
 
     print("Hit rate: " + str(hits/X.shape[0]*100) + "%")
 
-def neuralNetwork(theta1, theta2, X, y):
-    #Add 1s column to X
-    X_vec = np.hstack([np.ones([X.shape[0],1]), X])
-    
-    hits = 0
-    row = 0
-    fallos = np.zeros(10)
-    #compute result for each example
-    for ex in X_vec:
-        ex.reshape(ex.shape[0], 1) # (401, 1)
-        #Hidden layer
-        aux_res = np.dot(theta1, ex) # (25, 401) x (401, 1)
-        aux_res.reshape(aux_res.shape[0], 1) # (25, 1)
-        #Add 1 to aux_res
-        aux_res = np.hstack([1, aux_res]) # (26, 1)
-        #Output layer
-        output = np.dot(theta2, aux_res) # (10, 26) x (26, 1)
-        
-        if np.argmax(output) + 1 == y[row]: #Output[i] means label i+1
-            hits += 1
-        else:
-            fallos[y[row]-1] += 1
-        
-        row += 1
-    
-    print(hits)
-    print(fallos)
-    print("Hit rate: " + str(hits/X.shape[0]*100) + "%")
+def neuronalNetwork(X,  y, theta1, theta2):
+    # Input layer
+    a_1 = X
+    # Add 1s column to a_1
+    a_1 = np.hstack([np.ones([X.shape[0],1]), X])
+
+    # Hidden layer
+    z_2 = np.dot(a_1, theta1.T)
+    a_2 = sigmoid(z_2)
+    # Add 1s column to a_2
+    a_2 = np.hstack([np.ones([a_2.shape[0],1]), a_2])
+
+    # Output layer
+    z_3 = np.dot(a_2, np.transpose(theta2))
+    a_3 = sigmoid(z_3) 
+
+    # Hit rate
+    accuracyPercentage(a_1, a_3, y)
+
 
 def main():
     data = loadmat('ex3data1.mat')
@@ -136,11 +140,9 @@ def main():
     
     weights = loadmat ('ex3weights.mat')
     theta1, theta2 = weights['Theta1'], weights['Theta2']
-    # Theta1 es de dimensión 25 x 401
-    # Theta2 es de dimensión 10 x 26
     
     print("----------------- NEURAL NETWORK -----------------")
-    neuralNetwork(theta1, theta2, X, y)       
+    neuronalNetwork(X, y, theta1, theta2)       
     
     
  
