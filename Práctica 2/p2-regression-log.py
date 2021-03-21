@@ -159,7 +159,7 @@ def main():
     logistic_regression(X, Y)
 
     print("---------- REGULARIZED LOGISTIC REGRESSION ----------")
-    regularized_logistion_regression
+    regularized_logistion_regression(X, Y)
 
 if __name__ == "__main__":
     main()
