@@ -99,7 +99,7 @@ def compute_accuracy(theta, X, pos_adm, pos_no_adm):
     percentage = np.mean([hit_ratio_adm , hit_ratio_no_adm])
     print('The accuracy of our method is:', percentage, '%')
     
-def logistic_regression(X, Y):
+def logistic_regression(X, Y, m, n):
     m = np.shape(X)[0]
     matrix_X = np.hstack([np.ones([m, 1]), X])
     
@@ -156,7 +156,7 @@ def main():
     Y = data[:,-1]
     
     print("---------- LOGISTIC REGRESSION ----------")
-    logistic_regression(X, Y)
+    logistic_regression(X, Y, m, n)
 
     print("---------- REGULARIZED LOGISTIC REGRESSION ----------")
     regularized_logistion_regression(X, Y)
