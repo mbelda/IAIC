@@ -7,7 +7,7 @@ def sigmoid(z):
     return np.divide(1, 1 + np.exp(-z))
 
 def costFunction(X, y, theta1, theta2):
-    H = forwardPropagation(X, y, theta1, theta2)
+    a_1, a_2, H = forwardPropagation(X, y, theta1, theta2)
     
     return -1 / len(X) * np.sum(np.dot(y.T, np.log(H)) + np.dot((1-y).T, np.log(1-H)))
 
@@ -26,10 +26,10 @@ def accuracyPercentage(input, output, y):
         
         row += 1
 
-    print("Hit rate: " + str(hits/input.shape[0]*100) + "%")
-
 def backwardPropagation(params_rn, num_entradas, num_ocultas, num_etiquetas , X, y , reg):
-    #todo
+    cost = 0
+    gradient = 0
+    return (cost, gradient)
 
 def forwardPropagation(X,  y, theta1, theta2):
     # Input layer
@@ -50,7 +50,7 @@ def forwardPropagation(X,  y, theta1, theta2):
     # Hit rate
     accuracyPercentage(a_1, a_3, y)
 
-    return a_3
+    return a_1, a_2, a_3
 
 
 def main():
