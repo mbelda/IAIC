@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 def sigmoid(z):
     return np.divide(1, 1 + np.exp(-z))
 
-def neuronalNetwork(X, theta1, theta2):
+def forwardPropagation(X, theta1, theta2):
     # Input layer
     a_1 = X
     a_1 = np.hstack([np.ones([X.shape[0],1]), X])
@@ -23,7 +23,7 @@ def neuronalNetwork(X, theta1, theta2):
     return a_1, a_2, a_3
 
 def cost(theta1, theta2, X, Y):
-    A1, A2, H = neuronalNetwork(X, theta1, theta2)
+    A1, A2, H = forwardPropagation(X, theta1, theta2)
     c1 = Y * np.log(H)
     c2 = (1 - Y) * np.log(1 - H)
     return -1 / X.shape[0] * np.sum(c1 + c2)
@@ -35,7 +35,7 @@ def regularized_cost(theta1, theta2, X, Y, reg):
 
 def gradient(theta1, theta2, X, Y):
     #Compute neuronal network layers outputs
-    A1, A2, H = neuronalNetwork(X, theta1, theta2)
+    A1, A2, H = forwardPropagation(X, theta1, theta2)
     
     #Compute deltas
     Delta1 = np.zeros(theta1.shape)
@@ -71,7 +71,7 @@ def regularized_gradient(theta1, theta2, X, Y, reg_param):
     
     return np.concatenate((np.ravel(Delta1), np.ravel(Delta2)))
 
-def backprop(nn_params, input_layer_size, hidden_layer_size, num_labels, \
+def backPropagation(nn_params, input_layer_size, hidden_layer_size, num_labels, \
              X, Y, reg_param):
     #Unroll theta's
     d1 = hidden_layer_size * (input_layer_size + 1)
@@ -79,7 +79,7 @@ def backprop(nn_params, input_layer_size, hidden_layer_size, num_labels, \
     theta2 = np.reshape(nn_params[d1:], (num_labels, hidden_layer_size + 1))
     
     #Compute regularized cost
-    A1, A2, H = neuronalNetwork(X, theta1, theta2)
+    A1, A2, H = forwardPropagation(X, theta1, theta2)
     c1 = Y * np.log(H)
     c2 = (1 - Y) * np.log(1 - H)
     cost = -1 / X.shape[0] * np.sum(c1 + c2)
@@ -220,56 +220,88 @@ def trainNetwork(X, Y):
     eps = np.zeros(n_layers)
     for i in range(n_layers):
         eps[i] = np.sqrt(6)/np.sqrt(nodes_per_layer[i] + nodes_per_layer[i+1])
-    
-    
-    #Initialize theta
-    Theta1 = np.random.random((nodes_per_layer[1], nodes_per_layer[0] + 1)) \
-            * 2*eps[0] - eps[0]
-    Theta2 = np.random.random((nodes_per_layer[2], nodes_per_layer[1] + 1)) \
-            * 2*eps[1] - eps[1]
-    
-    initialTheta = np.concatenate((np.ravel(Theta1), np.ravel(Theta2)))
+    print("Epsilon: " + str(eps))
+     
     #Fixed parameters
-    num_iter = 70
-    reg_param = 1
-    optTheta = initialTheta
+    num_iters = np.array([40, 70, 100, 200])
+    reg_params = np.array([0.1, 0.5, 1, 1.5, 2])
     
-    #Optimize theta
-    fmin = opt.minimize(fun = backprop, \
-                            x0 = optTheta, \
-                            args = (nodes_per_layer[0], nodes_per_layer[1], \
-                                  nodes_per_layer[2], X, Y, reg_param), \
-                            method = 'TNC', \
-                            jac = True, \
-                            options = {'maxiter' : num_iter})
-    
-    optTheta = fmin['x']
-    
-    #Unroll theta
-    d1 = nodes_per_layer[1] * (nodes_per_layer[0] + 1)
-    theta1 = np.reshape(optTheta[:d1], (nodes_per_layer[1], nodes_per_layer[0] + 1))
-    theta2 = np.reshape(optTheta[d1:], (nodes_per_layer[2], nodes_per_layer[1] + 1))
-    
-    #Regularized cost
-    c = regularized_cost(theta1, theta2, X, Y, reg_param)
-    print("Optimized regularized cost: %.6f" % c)
-    
-    
-    #Prediction results
-    A1, A2, H = neuronalNetwork(X, theta1, theta2)
-    
-    #Compute accuracy
-    row = 0
-    hits = 0
-    for i in range(X.shape[0]):
-        if np.argmax(H[row, :]) == np.argmax(Y[row, :]):
-            hits = hits + 1    
-        row = row + 1
+    acc = np.zeros(len(num_iters)*len(reg_params))
+    i = 0
+    for num_iter in num_iters:
+        print("------------------- NUM ITERS = %d -------------------" % num_iter)
+        j = 0
+        for reg_param in reg_params:
+            print("------------------- REG PARAM = %0.1f -------------------" % reg_param)
+            #Initialize theta
+            Theta1 = np.random.random((nodes_per_layer[1], nodes_per_layer[0] + 1)) \
+                    * 2*eps[0] - eps[0]
+            Theta2 = np.random.random((nodes_per_layer[2], nodes_per_layer[1] + 1)) \
+                    * 2*eps[1] - eps[1]
+            
+            initialTheta = np.concatenate((np.ravel(Theta1), np.ravel(Theta2)))
+            
+            #Optimize theta
+            optTheta = initialTheta
+            fmin = opt.minimize(fun = backPropagation, \
+                                    x0 = optTheta, \
+                                    args = (nodes_per_layer[0], nodes_per_layer[1], \
+                                          nodes_per_layer[2], X, Y, reg_param), \
+                                    method = 'TNC', \
+                                    jac = True, \
+                                    options = {'maxiter' : num_iter})
+            
+            optTheta = fmin['x']
         
-    acc = hits/X.shape[0]*100
+            #Unroll theta
+            d1 = nodes_per_layer[1] * (nodes_per_layer[0] + 1)
+            theta1 = np.reshape(optTheta[:d1], (nodes_per_layer[1], nodes_per_layer[0] + 1))
+            theta2 = np.reshape(optTheta[d1:], (nodes_per_layer[2], nodes_per_layer[1] + 1))
+            
+            #Prediction results
+            A1, A2, H = forwardPropagation(X, theta1, theta2)
+            
+            #Compute accuracy
+            row = 0
+            hits = 0
+            for k in range(X.shape[0]):
+                if np.argmax(H[row, :]) == np.argmax(Y[row, :]):
+                    hits = hits + 1    
+                row = row + 1
+            acc[i*len(reg_params) + j] = hits/X.shape[0]*100
+                
+            print("Hit rate: %.2f%%" % acc[i*len(reg_params) + j])
+            
+            j = j + 1
         
-    print("Hit rate: %.6f%%" % acc)
+        #Plot difference for reg_param
+        plt.figure()
+        plt.plot(reg_params, acc[i*len(reg_params):(i + 1)*len(reg_params)], \
+                  marker='x', c='orange')
+        plt.xlabel("Regularization parameter")
+        plt.ylabel("Accuracy (%)")
+        plt.legend()
+        plt.ylim([80, 100])
+        plt.title("Accuracy with %d iterations" % num_iter)
+        plt.show()
+        #plt.savefig("accuracy_with_%d_iteracions.png" % num_iter)
         
+        i = i + 1
+        
+    
+    #Plot difference for num_iter
+    for i in range(len(reg_params)):
+        plt.figure()
+        indexes = np.linspace(i, len(acc) - 1, num=len(num_iters)).astype(int)
+        plt.plot(num_iters, acc[indexes], marker='x', c='blue')
+        plt.xlabel("Number of iterations")
+        plt.ylabel("Accuracy (%)")
+        plt.legend()
+        plt.ylim([80, 100])
+        plt.title("Accuracy with lambda=%0.2f" % reg_params[i])
+        plt.show()
+        #plt.savefig("accuracy_with_lambda_%.2f.png" % reg_params[i])
+
 
 def main():
     #Load data
@@ -299,7 +331,7 @@ def main():
     print("Initial regularized cost: %.6f" % c)
     
     #Check gradient
-    checkNNGradients(backprop, reg)
+    checkNNGradients(backPropagation, reg)
     
     #Train network
     trainNetwork(X, Y)
