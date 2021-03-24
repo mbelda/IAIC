@@ -1,46 +1,10 @@
 import numpy as np
-from pandas.io.parsers import read_csv
-import matplotlib.pyplot as plt
 import scipy.optimize as opt
 from scipy.io import loadmat
-from sklearn.preprocessing import PolynomialFeatures
+import matplotlib.pyplot as plt
 
 def sigmoid(z):
     return np.divide(1, 1 + np.exp(-z))
-
-def gradient(theta, X, Y):
-    H = sigmoid(np.dot(X, theta))
-    
-    return 1 / len(Y) * np.dot(X.T, H - Y)
-
-def regularized_gradient(theta, lamb, X, Y):
-    gr = gradient(theta, X, Y)
-    reg = lamb/len(X)*theta
-    reg[0] = 0 #Theta_0 doesn't have extra cost
-    return np.add(gr, reg)
-
-
-def displayData(X):
-    num_plots = int(np.size(X, 0)**.5)
-    fig, ax = plt.subplots(num_plots, num_plots, sharex=True, sharey=True)
-    plt.subplots_adjust(left=0, wspace=0, hspace=0)
-    img_num = 0
-    for i in range(num_plots):
-        for j in range(num_plots):
-            # Convert column vector into 20x20 pixel matrix
-            # transpose
-            img = X[img_num, :].reshape(20, 20).T
-            ax[i][j].imshow(img, cmap='Greys')
-            ax[i][j].set_axis_off()
-            img_num += 1
-
-    return (fig, ax)
-
-def displayImage(im):
-    fig2, ax2 = plt.subplots()
-    image = im.reshape(20, 20).T
-    ax2.imshow(image, cmap='gray')
-    return (fig2, ax2)
 
 def neuronalNetwork(X, theta1, theta2):
     # Input layer
@@ -56,27 +20,256 @@ def neuronalNetwork(X, theta1, theta2):
     z_3 = np.dot(a_2, theta2.T)
     a_3 = sigmoid(z_3)
     
-    return a_3
+    return a_1, a_2, a_3
 
 def cost(theta1, theta2, X, Y):
-    H = neuronalNetwork(X, theta1, theta2)
+    A1, A2, H = neuronalNetwork(X, theta1, theta2)
     c1 = Y * np.log(H)
     c2 = (1 - Y) * np.log(1 - H)
     return -1 / X.shape[0] * np.sum(c1 + c2)
 
-def regularizedCost(theta1, theta2, X, Y, reg):
+def regularized_cost(theta1, theta2, X, Y, reg):
     c = cost(theta1, theta2, X, Y)
-    return c + reg / (2 * len(X)) * (np.sum(np.power(theta1[:,1:], 2)) + np.sum(np.power(theta2[:,1:], 2))) 
+    return c + reg / (2 * len(X)) * (np.sum(np.power(theta1[:,1:], 2))  \
+                                     + np.sum(np.power(theta2[:,1:], 2))) 
 
-
-def backprop(params_rn, num_entradas, num_ocultas, num_etiquetas, X, Y, reg):
-    d1 = num_ocultas * (num_entradas + 1)
-    theta1 = np.reshape(params_rn[:d1], (num_ocultas, num_entradas + 1))
-    theta2 =np.reshape(params_rn[d1:], (num_etiquetas, num_ocultas + 1))
-    cost = regularizedCost(theta1, theta2, X, Y, reg)
+def gradient(theta1, theta2, X, Y):
+    #Compute neuronal network layers outputs
+    A1, A2, H = neuronalNetwork(X, theta1, theta2)
     
-    return cost
- 
+    #Compute deltas
+    Delta1 = np.zeros(theta1.shape)
+    Delta2 = np.zeros(theta2.shape)
+    for t in range(len(X)):
+        a1t = A1[t, :] # (401,)
+        a2t = A2[t, :] # (26,)
+        ht = H[t, :] # (10,)
+        yt = Y[t] # (10,)
+        d3t = ht - yt # (10,)
+        d2t = np.dot(theta2.T, d3t) * (a2t * (1 - a2t)) # (26,)
+        Delta1 = Delta1 + np.dot(d2t[1:, np.newaxis], a1t[np.newaxis, :])
+        Delta2 = Delta2 + np.dot(d3t[:, np.newaxis], a2t[np.newaxis, :])
+    
+    Delta1 = Delta1/len(X)
+    Delta2 = Delta2/len(X)
+    
+    return np.concatenate((np.ravel(Delta1), np.ravel(Delta2)))
+   
+
+def regularized_gradient(theta1, theta2, X, Y, reg_param):
+    #Compute gradient
+    grad = gradient(theta1, theta2, X, Y)
+    
+    #Unroll deltas
+    m,n = theta1.shape
+    Delta1 = np.reshape(grad[:m*n], theta1.shape)
+    Delta2 = np.reshape(grad[m*n:], theta2.shape)
+    
+    #Compute regularized gradient
+    Delta1[:, 1:] = Delta1[:, 1:] + reg_param/ len(X) * theta1[:, 1:]
+    Delta2[:, 1:] = Delta2[:, 1:] + reg_param/ len(X) * theta2[:, 1:]
+    
+    return np.concatenate((np.ravel(Delta1), np.ravel(Delta2)))
+
+def backprop(nn_params, input_layer_size, hidden_layer_size, num_labels, \
+             X, Y, reg_param):
+    #Unroll theta's
+    d1 = hidden_layer_size * (input_layer_size + 1)
+    theta1 = np.reshape(nn_params[:d1], (hidden_layer_size, input_layer_size + 1))
+    theta2 = np.reshape(nn_params[d1:], (num_labels, hidden_layer_size + 1))
+    
+    #Compute regularized cost
+    A1, A2, H = neuronalNetwork(X, theta1, theta2)
+    c1 = Y * np.log(H)
+    c2 = (1 - Y) * np.log(1 - H)
+    cost = -1 / X.shape[0] * np.sum(c1 + c2)
+    reg_cost = cost + reg_param / (2 * len(X)) * (np.sum(np.power(theta1[:,1:], 2))  \
+                                     + np.sum(np.power(theta2[:,1:], 2)))
+    
+    #Compute regularized gradient
+    Delta1 = np.zeros(theta1.shape)
+    Delta2 = np.zeros(theta2.shape)
+    for t in range(len(X)):
+        a1t = A1[t, :] # (401,)
+        a2t = A2[t, :] # (26,)
+        ht = H[t, :] # (10,)
+        yt = Y[t] # (10,)
+        d3t = ht - yt # (10,)
+        d2t = np.dot(theta2.T, d3t) * (a2t * (1 - a2t)) # (26,)
+        Delta1 = Delta1 + np.dot(d2t[1:, np.newaxis], a1t[np.newaxis, :])
+        Delta2 = Delta2 + np.dot(d3t[:, np.newaxis], a2t[np.newaxis, :])
+
+    Delta1 = Delta1/len(X)
+    Delta2 = Delta2/len(X)
+    
+    Delta1[:, 1:] = Delta1[:, 1:] + reg_param / len(X) * theta1[:, 1:]
+    Delta2[:, 1:] = Delta2[:, 1:] + reg_param / len(X) * theta2[:, 1:]
+    
+    DeltaVec = np.concatenate((np.ravel(Delta1), np.ravel(Delta2)))
+    
+    return reg_cost, DeltaVec
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+#-------------------------------- TEST CODE ----------------------------------
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+def debugInitializeWeights(fan_in, fan_out):
+    """
+    Initializes the weights of a layer with fan_in incoming connections and
+    fan_out outgoing connections using a fixed set of values.
+    """
+
+    # Set W to zero matrix
+    W = np.zeros((fan_out, fan_in + 1))
+
+    # Initialize W using "sin". This ensures that W is always of the same
+    # values and will be useful in debugging.
+    W = np.array([np.sin(w) for w in
+                  range(np.size(W))]).reshape((np.size(W, 0), np.size(W, 1)))
+
+    return W
+
+
+def computeNumericalGradient(J, theta):
+    """
+    Computes the gradient of J around theta using finite differences and
+    yields a numerical estimate of the gradient.
+    """
+
+    numgrad = np.zeros_like(theta)
+    perturb = np.zeros_like(theta)
+    tol = 1e-4
+
+    for p in range(len(theta)):
+        # Set perturbation vector
+        perturb[p] = tol
+        loss1 = J(theta - perturb)
+        loss2 = J(theta + perturb)
+
+        # Compute numerical gradient
+        numgrad[p] = (loss2 - loss1) / (2 * tol)
+        perturb[p] = 0
+
+    return numgrad
+
+
+def checkNNGradients(costNN, reg_param):
+    """
+    Creates a small neural network to check the back propogation gradients.
+    Outputs the analytical gradients produced by the back prop code and the
+    numerical gradients computed using the computeNumericalGradient function.
+    These should result in very similar values.
+    """
+    # Set up small NN
+    input_layer_size = 3
+    hidden_layer_size = 5
+    num_labels = 3
+    m = 5
+
+    # Generate some random test data
+    Theta1 = debugInitializeWeights(hidden_layer_size, input_layer_size)
+    Theta2 = debugInitializeWeights(num_labels, hidden_layer_size)
+
+    # Reusing debugInitializeWeights to get random X
+    X = debugInitializeWeights(input_layer_size - 1, m)
+
+    # Set each element of y to be in [0,num_labels]
+    y = [(i % num_labels) for i in range(m)]
+
+    ys = np.zeros((m, num_labels))
+    for i in range(m):
+        ys[i, y[i]] = 1
+
+    # Unroll parameters
+    nn_params = np.append(Theta1, Theta2).reshape(-1)
+
+    # Compute Cost
+    cost, grad = costNN(nn_params,
+                        input_layer_size,
+                        hidden_layer_size,
+                        num_labels,
+                        X, ys, reg_param)
+
+    def reduced_cost_func(p):
+        """ Cheaply decorated nnCostFunction """
+        return costNN(p, input_layer_size, hidden_layer_size, num_labels,
+                      X, ys, reg_param)[0]
+
+    numgrad = computeNumericalGradient(reduced_cost_func, nn_params)
+
+    # Check two gradients
+    print('grad shape: ', grad.shape)
+    print('num grad shape: ', numgrad.shape)
+    np.testing.assert_almost_equal(grad, numgrad)
+    print("Gradient OK")
+    return (grad - numgrad)
+
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+#-------------------------------- TEST CODE ----------------------------------
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+
+def trainNetwork(X, Y):
+    #Compute epsilon for each layer
+    n_layers = 2
+    nodes_per_layer = np.array([400, 25, 10]) 
+    eps = np.zeros(n_layers)
+    for i in range(n_layers):
+        eps[i] = np.sqrt(6)/np.sqrt(nodes_per_layer[i] + nodes_per_layer[i+1])
+    
+    
+    #Initialize theta
+    Theta1 = np.random.random((nodes_per_layer[1], nodes_per_layer[0] + 1)) \
+            * 2*eps[0] - eps[0]
+    Theta2 = np.random.random((nodes_per_layer[2], nodes_per_layer[1] + 1)) \
+            * 2*eps[1] - eps[1]
+    
+    initialTheta = np.concatenate((np.ravel(Theta1), np.ravel(Theta2)))
+    #Fixed parameters
+    num_iter = 70
+    reg_param = 1
+    optTheta = initialTheta
+    
+    #Optimize theta
+    fmin = opt.minimize(fun = backprop, \
+                            x0 = optTheta, \
+                            args = (nodes_per_layer[0], nodes_per_layer[1], \
+                                  nodes_per_layer[2], X, Y, reg_param), \
+                            method = 'TNC', \
+                            jac = True, \
+                            options = {'maxiter' : num_iter})
+    
+    optTheta = fmin['x']
+    
+    #Unroll theta
+    d1 = nodes_per_layer[1] * (nodes_per_layer[0] + 1)
+    theta1 = np.reshape(optTheta[:d1], (nodes_per_layer[1], nodes_per_layer[0] + 1))
+    theta2 = np.reshape(optTheta[d1:], (nodes_per_layer[2], nodes_per_layer[1] + 1))
+    
+    #Regularized cost
+    c = regularized_cost(theta1, theta2, X, Y, reg_param)
+    print("Optimized regularized cost: %.6f" % c)
+    
+    
+    #Prediction results
+    A1, A2, H = neuronalNetwork(X, theta1, theta2)
+    
+    #Compute accuracy
+    row = 0
+    hits = 0
+    for i in range(X.shape[0]):
+        if np.argmax(H[row, :]) == np.argmax(Y[row, :]):
+            hits = hits + 1    
+        row = row + 1
+        
+    acc = hits/X.shape[0]*100
+        
+    print("Hit rate: %.6f%%" % acc)
+        
 
 def main():
     #Load data
@@ -84,8 +277,6 @@ def main():
     y = data['y'].ravel()
     X = data['X']
     m = len(y)
-    num_entradas = 400
-    num_ocultas = 25
     num_labels = 10
     
     #Create label matrix Y
@@ -97,24 +288,21 @@ def main():
     #Load network weights
     weights = loadmat ('ex4weights.mat')
     theta1, theta2 = weights['Theta1'], weights['Theta2']
-    print(theta1.shape)
-    print(theta2.shape)
     
     #Compute initial cost
     c = cost(theta1, theta2, X, Y)
     print("Initial cost: %.6f" % c)
     
     #Compute initial regularized cost
-    reg = 1 #Regularization parameter
-    c = regularizedCost(theta1, theta2, X, Y, reg)
+    reg = 1
+    c = regularized_cost(theta1, theta2, X, Y, reg)
     print("Initial regularized cost: %.6f" % c)
     
-    #Concatenate neuronal network params
-    thetaVec = np.concatenate((np.ravel(theta1), np.ravel(theta2)))
+    #Check gradient
+    checkNNGradients(backprop, reg)
     
-    c = backprop(thetaVec, num_entradas, num_ocultas, num_labels, X, Y, reg)
-    print(c)
-    
+    #Train network
+    trainNetwork(X, Y)
     
  
 if __name__ == "__main__":
