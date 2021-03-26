@@ -280,11 +280,11 @@ def trainNetwork(X, Y):
                   marker='x', c='orange')
         plt.xlabel("Regularization parameter")
         plt.ylabel("Accuracy (%)")
-        plt.legend()
         plt.ylim([80, 100])
         plt.title("Accuracy with %d iterations" % num_iter)
+        plt.legend()
+        #plt.savefig("accuracy_with_%d_iterations.png" % num_iter)
         plt.show()
-        #plt.savefig("accuracy_with_%d_iteracions.png" % num_iter)
         
         i = i + 1
         
@@ -296,11 +296,11 @@ def trainNetwork(X, Y):
         plt.plot(num_iters, acc[indexes], marker='x', c='blue')
         plt.xlabel("Number of iterations")
         plt.ylabel("Accuracy (%)")
-        plt.legend()
         plt.ylim([80, 100])
         plt.title("Accuracy with lambda=%0.2f" % reg_params[i])
-        plt.show()
+        plt.legend()
         #plt.savefig("accuracy_with_lambda_%.2f.png" % reg_params[i])
+        plt.show()
 
 
 def main():
