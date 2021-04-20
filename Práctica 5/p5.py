@@ -60,8 +60,8 @@ def regularized_linear_regression(X, y):
     c = reg_cost(Theta, X_vec, y, reg)
     g = reg_gradient(Theta, X_vec, y, reg)
     
-    print("Initial cost: %.4f" % c)
-    print("Initial gradient: [%.4f, %.4f]" % (g[0], g[1]))
+    print("Initial cost: %.3f" % c)
+    print("Initial gradient: [%.3f, %.3f]" % (g[0], g[1]))
     
     #Regularization param
     reg = 0
@@ -136,16 +136,28 @@ def polynomial_regression(X, y):
     min_bound = np.amin(X)
     max_bound = np.amax(X)
     X_new = np.arange(min_bound, max_bound, 0.05)
-    X_new.resize(X_new.shape[0],1)
+    print(X_new)
     #Polynomial
     X_new_pol = Xpolynomial(X_new, p)
+    print(X_new_pol)
     #Normalize
     X_new_norm = np.divide(np.subtract(X_new_pol, mu), sigma)
     #Vectorize
     X_new_vec = np.hstack([np.ones([X_new_norm.shape[0],1]), X_new_norm])
-    
+    print(X_new_vec)
     #Compute predictions
     predictions = np.dot(X_new_vec, Theta_opt)
+
+    print(predictions)
+    
+    #----------PRUEBAS---------
+    x = np.array([-48])
+    x = Xpolynomial(x, p)
+    x = (x-mu)/sigma
+    x = np.hstack([np.ones([x.shape[0],1]), x])
+    pred_x = np.dot(x,Theta_opt)
+    print(pred_x)
+    #----------END PRUEBAS---------
     
     #Plot data points and aproximated points
     plt.figure()
