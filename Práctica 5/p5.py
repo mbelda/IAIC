@@ -282,19 +282,19 @@ def main():
     ytest = data['ytest'].ravel()
     
     
-    # 5.1: REGRESIÓN LINEAL REGULARIZADA
+    # 5.1: REGULARIZED LINEAR REGRESSION
     regularized_linear_regression(X, y)
     
-    # 5.2: CURVAS DE APRENDIZAJE
+    # 5.2: LEARNING CURVES
     learning_curves(X, y, Xval, yval)
     
-    # 5.3: POLINOMIAL REGRESSION
+    # 5.3: POLYNOMIAL REGRESSION
     polynomial_regression(X, y, Xval, yval, Xtest, ytest)
     
     #Learning curves polynomial regression
     learning_curves_poly(X, y, Xval, yval)
     
-    # 5.4: Selecting lambda
+    # 5.4: SELECTING LAMBDA
     selectingLambda(X, y, Xval, yval)
     
     #Error on test with lambda = 3
