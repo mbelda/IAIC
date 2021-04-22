@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Apr 20 09:33:17 2021
-
-@author: Majo
-"""
-
 import numpy as np
 import scipy.optimize as opt
 from scipy.io import loadmat
