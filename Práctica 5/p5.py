@@ -115,11 +115,11 @@ def learning_curves(X, y, Xval, yval):
     plt.savefig('errors.png')
 
 
-def polynomial_regression(X, y):
+def polynomial_regression(X, y, Xval, yval, Xtest, ytest):
     #Transform X
     p = 8
     X_pol = Xpolynomial(X, p)
-    X_norm, sigma, mu = normalize(X_pol)
+    X_norm, mu, sigma = normalize(X_pol)
     X_vec_pol = np.hstack([np.ones([X_norm.shape[0],1]), X_norm])
     
     #Regularization param
@@ -136,28 +136,14 @@ def polynomial_regression(X, y):
     min_bound = np.amin(X)
     max_bound = np.amax(X)
     X_new = np.arange(min_bound, max_bound, 0.05)
-    print(X_new)
-    #Polynomial
+    
+    #Transform new points
     X_new_pol = Xpolynomial(X_new, p)
-    print(X_new_pol)
-    #Normalize
     X_new_norm = np.divide(np.subtract(X_new_pol, mu), sigma)
-    #Vectorize
     X_new_vec = np.hstack([np.ones([X_new_norm.shape[0],1]), X_new_norm])
-    print(X_new_vec)
+    
     #Compute predictions
     predictions = np.dot(X_new_vec, Theta_opt)
-
-    print(predictions)
-    
-    #----------PRUEBAS---------
-    x = np.array([-48])
-    x = Xpolynomial(x, p)
-    x = (x-mu)/sigma
-    x = np.hstack([np.ones([x.shape[0],1]), x])
-    pred_x = np.dot(x,Theta_opt)
-    print(pred_x)
-    #----------END PRUEBAS---------
     
     #Plot data points and aproximated points
     plt.figure()
@@ -167,7 +153,120 @@ def polynomial_regression(X, y):
     plt.ylabel("Water flowing out of the dam (y)")
     plt.legend()
     plt.title("Polynomial regression ($\lambda = 0$)")
-    #plt.savefig('regresion_polinomial.png')
+    plt.savefig('regresion_polinomial.png')
+
+    
+    
+def learning_curves_poly(X, y, Xval, yval):
+    #Transform X
+    p = 8
+    X_pol = Xpolynomial(X, p)
+    X_norm, mu, sigma = normalize(X_pol)
+    X_vec_pol = np.hstack([np.ones([X_norm.shape[0],1]), X_norm])
+    
+    #Transform Xval
+    Xval_pol = Xpolynomial(Xval, p)
+    Xval_norm = np.divide(np.subtract(Xval_pol, mu), sigma)
+    Xval_vec_pol = np.hstack([np.ones([Xval_norm.shape[0],1]), Xval_norm])
+    
+    #Regularization param
+    regs = [0, 1, 100]
+    for reg in regs:
+        #Initialize errors
+        train_errors = np.zeros(X_vec_pol.shape[0])
+        validation_errors = np.zeros(X_vec_pol.shape[0])
+        
+        for i in range(1,X_vec_pol.shape[0]):
+            #Generate the subset
+            X_i = X_vec_pol[0:i,:]
+            y_i = y[0:i]
+            
+            #Compute optimum Theta
+            Theta = np.ones(X_i.shape[1]) 
+            res = opt.minimize(fun=reg_cost, x0=Theta, args=(X_i, y_i, reg), jac=reg_gradient)
+            Theta_opt = res['x']
+            
+            #Compute training and validation error
+            train_errors[i] = error(Theta_opt, X_i, y_i)
+            validation_errors[i] = error(Theta_opt, Xval_vec_pol, yval)
+        
+        #Plot errors
+        plt.figure()
+        plt.plot(range(1,X.shape[0]), train_errors[1:], color='blue', label='Train')
+        plt.plot(range(1,X.shape[0]), validation_errors[1:], color='orange', label='Cross Validation')
+        plt.xlabel("Number of training examples")
+        plt.ylabel("Error")
+        plt.title("Learning curve for polynomial regression ($\lambda$ = %d)" % reg)
+        plt.legend(loc='upper right')
+        plt.savefig('errors_poly_lambda_%d.png' % reg)
+
+
+def selectingLambda(X, y, Xval, yval):
+    #Transform X
+    p = 8
+    X_pol = Xpolynomial(X, p)
+    X_norm, mu, sigma = normalize(X_pol)
+    X_vec_pol = np.hstack([np.ones([X_norm.shape[0],1]), X_norm])
+    
+    #Transform Xval
+    Xval_pol = Xpolynomial(Xval, p)
+    Xval_norm = np.divide(np.subtract(Xval_pol, mu), sigma)
+    Xval_vec_pol = np.hstack([np.ones([Xval_norm.shape[0],1]), Xval_norm])
+    
+    #Lambda values
+    regs = [0, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10]
+    
+    #Initialize errors
+    train_errors = np.zeros(len(regs))
+    validation_errors = np.zeros(len(regs))
+    i = 0
+    for reg in regs:
+        #Initialize theta
+        Theta = np.ones(X_vec_pol.shape[1])
+        
+        #Compute optimum Theta
+        Theta = np.ones(X_vec_pol.shape[1]) 
+        res = opt.minimize(fun=reg_cost, x0=Theta, args=(X_vec_pol, y, reg), jac=reg_gradient)
+        Theta_opt = res['x']
+
+        #Compute training and validation error
+        train_errors[i] = error(Theta_opt, X_vec_pol, y)
+        validation_errors[i] = error(Theta_opt, Xval_vec_pol, yval)
+        i += 1
+        
+    #Plot errors
+    plt.figure()
+    plt.plot(regs, train_errors, color='blue', label='Train')
+    plt.plot(regs, validation_errors, color='orange', label='Cross Validation')
+    plt.xlabel("$\lambda$")
+    plt.ylabel("Error")
+    plt.title("Selecting $\lambda$ using a cross validation set")
+    plt.legend(loc='upper right')
+    plt.savefig('select_lambda.png')
+
+def error_on_test(X, y, Xtest, ytest):
+    #Transform X
+    p = 8
+    X_pol = Xpolynomial(X, p)
+    X_norm, mu, sigma = normalize(X_pol)
+    X_vec_pol = np.hstack([np.ones([X_norm.shape[0],1]), X_norm])
+    
+    #Transform Xtest
+    Xtest_pol = Xpolynomial(Xtest, p)
+    Xtest_norm = np.divide(np.subtract(Xtest_pol, mu), sigma)
+    Xtest_vec_pol = np.hstack([np.ones([Xtest_norm.shape[0],1]), Xtest_norm])
+    
+    #Lambda value
+    reg = 3
+    
+    #Compute optimum Theta
+    Theta = np.ones(X_vec_pol.shape[1]) 
+    res = opt.minimize(fun=reg_cost, x0=Theta, args=(X_vec_pol, y, reg), jac=reg_gradient)
+    Theta_opt = res['x']
+    
+    #Error on test values
+    e = error(Theta_opt, Xtest_vec_pol, ytest)
+    print("Error on test values with lambda = 3: %.3f" % e)
 
 def main():
     #Load data
@@ -190,7 +289,18 @@ def main():
     learning_curves(X, y, Xval, yval)
     
     # 5.3: POLINOMIAL REGRESSION
-    polynomial_regression(X, y)
+    polynomial_regression(X, y, Xval, yval, Xtest, ytest)
+    
+    #Learning curves polynomial regression
+    learning_curves_poly(X, y, Xval, yval)
+    
+    # 5.4: Selecting lambda
+    selectingLambda(X, y, Xval, yval)
+    
+    #Error on test with lambda = 3
+    error_on_test(X, y, Xtest, ytest)
+    
+    
     
     
     
