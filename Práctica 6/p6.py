@@ -212,10 +212,7 @@ from sklearn.metrics import classification_report
 from google.colab import files
 
 
-def logisticRegression():
-    #X, y = make_circles(n_samples=1000, noise=0.05, factor=0.3, random_state=0)
-    
-    X, y = make_moons(n_samples=1000, noise=0.05, random_state=0)
+def logisticRegression(X, y, str):
     
     model = keras.Sequential()
     
@@ -225,25 +222,31 @@ def logisticRegression():
     history = model.fit(x=X, y=y, verbose=0, epochs=50)
 
     plot_loss_accuracy(history)
-    plt.savefig("plot_loss_acc_logistic_regression.png")
-    #files.download("plot_loss_acc_logistic_regression.png")
+    plt.savefig("plot_loss_acc_logistic_regression_%s.png" % str)
+    files.download("plot_loss_acc_logistic_regression_%s.png" % str)
     
     plot_data(X,y)
-    plt.savefig("data_moons.png")
-    #files.download("data_moons.png")
+    plt.savefig("data_%s.png" % str)
+    files.download("data_%s.png" % str)
 
     plot_decision_boundary(lambda x: model.predict(x), X, y)
-    plt.savefig("plot_decision_boundary_logistic_regression.png")
-    #files.download("plot_decision_boundary_logistic_regression.png")
+    plt.savefig("plot_decision_boundary_logistic_regression_%s.png" % str)
+    files.download("plot_decision_boundary_logistic_regression_%s.png" % str)
 
     y_pred = model.predict_classes(X, verbose=0)
     print(classification_report(y, y_pred))
 
     plot_confusion_matrix(model, X, y)
-    plt.savefig("plot_confusion_matrix_logistic_regression.png")
-    #files.download("plot_confusion_matrix_logistic_regression.png")
+    plt.savefig("plot_confusion_matrix_logistic_regression_%s.png" % str)
+    files.download("plot_confusion_matrix_logistic_regression_%s.png" % str)
 
-logisticRegression()
+#Moons    
+X, y = make_moons(n_samples=1000, noise=0.05, random_state=0)
+logisticRegression(X, y, "moons")
+
+#Circles
+X, y = make_circles(n_samples=1000, noise=0.05, factor=0.3, random_state=0)
+logisticRegression(X, y, "circles")
 
 import tensorflow as tf
 
